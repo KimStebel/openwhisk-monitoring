@@ -2,10 +2,15 @@
 
 . secret # defines secret $POSTMARK_TOKEN
 
+# remove and create the build directory
 rm -rf build
 mkdir build
 
+# create a trigger that will be activated every 10 minutes
 wsk trigger create every10minutes --feed /whisk.system/alarms/alarm --param cron '0 */10 * * * *' --param trigger_payload '{}' --param maxTriggers 10000
+# insert the secret postmark authentication token into the js file
 cat monitor.js | sed "s/AAAPOSTMARKTOKENAAA/${POSTMARK_TOKEN}/g" >build/monitor.js
+# create an action from the js file. The action checks the server status and sends an email in case of a problem
 wsk action create monitor build/monitor.js
+# connect the trigger to the action
 wsk rule create monitor-every-10-minutes every10minutes monitor
