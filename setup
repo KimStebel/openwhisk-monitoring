@@ -1,0 +1,11 @@
+#!/bin/bash
+
+. secret # defines secret $POSTMARK_TOKEN
+
+rm -rf build
+mkdir build
+
+wsk trigger create every10minutes --feed /whisk.system/alarms/alarm --param cron '0 */10 * * * *' --param trigger_payload '{}' --param maxTriggers 10000
+cat monitor.js | sed "s/AAAPOSTMARKTOKENAAA/${POSTMARK_TOKEN}/g" >build/monitor.js
+wsk action create monitor build/monitor.js
+wsk rule create monitor-every-10-minutes every10minutes monitor
